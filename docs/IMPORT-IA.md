@@ -442,6 +442,8 @@ Placer les modules bord à bord contre le mur (`rot` : face avant vers la pièce
 * `pergola` — Pergola — 3×3×2.5 — couleurs : Structure, Lames
 * `abri_jardin` — Abri de jardin — 2×1.6×2.2 — couleurs : Murs, Toit
 * `banc_jardin` — Banc de jardin — 1.5×0.55×0.85 — couleurs : Lames, Structure
+* `banquette_jardin` — Banquette de jardin en teck — 2×0.75×0.78 — couleurs : Teck, Coussins
+* `bbq_maconne` — Barbecue maçonné avec cheminée — 2.16×2.58×3.4 — couleurs : Enduit, Pierre
 * `bac_potager` — Bac potager — 1.2×0.8×0.4 — couleurs : Bois, Terre
 * `jardiniere` — Jardinière fleurie — 0.8×0.25×0.35 — couleurs : Bac, Fleurs
 * `cloture` — Palissade (panneau) — 1.8×0.05×1.5 — couleurs : Lames
@@ -485,3 +487,7 @@ Placer les modules bord à bord contre le mur (`rot` : face avant vers la pièce
 * `chaussures_abattants` — Meuble à chaussures 2 abattants — 0.8×0.24×1 — couleurs : Corps
 * `chaussures_hemnes` — Meuble à chaussures 2 compartiments (type Hemnes) — 0.89×0.3×1.27 — couleurs : Corps
 * `portant_trones` — Range-chaussures mural (type Trones) — 0.52×0.18×0.39 — elev 0.3 — couleurs : Corps
+
+### Structure
+
+* `escalier_droit` — Escalier droit (marches suspendues) — 0.58×3.42×2.4 — champ `nb` (nombre de marches, 12 par défaut) — couleurs : Marches, Limons. La montée se fait vers l'arrière (−z) : on arrive par la face avant.
