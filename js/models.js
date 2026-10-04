@@ -22,30 +22,11 @@ export const SLOTS = {
 const BED = { c1: [['bois', 0], ['tissu', 0]], c2: [['couette', 0], ['linge', 0.6], ['plaid', -0.38]] };
 for (const k of ['lit90', 'lit140', 'lit160', 'lit180']) SLOTS[k] = BED;
 
-// Rustine : dans le pack, canapés et lits ne contiennent qu'UN coussin d'assise / de dossier / UN oreiller (le dernier de la boucle de modélisation).
-// Quand le nœud est nettement plus étroit que le meuble, on le duplique (décalages en mètres dans le repère du modèle, ou miroir pour un oreiller).
-// Un pack corrigé (nœuds couvrant toute la largeur) n'est pas touché.
-const FIX = {
-  canape3: [['assises', [-0.6, -1.2]], ['dossiers', [-0.6, -1.2]]],
-  canape2: [['assises', [-0.65]], ['dossiers', [-0.65]]],
-  lit140: [['oreillers', 'miroir']], lit160: [['oreillers', 'miroir']], lit180: [['oreillers', 'miroir']],
-};
-function completer(w, model, dw) {
-  for (const [name, how] of FIX[model] || []) {
-    const n = w.getObjectByName(name); if (!n || !n.parent) continue;
-    const bx = new THREE.Box3().setFromObject(n), wd = bx.max.x - bx.min.x, cx = (bx.max.x + bx.min.x) / 2;
-    if (how === 'miroir') { if (Math.abs(cx) < 0.15 * dw) continue; const c = n.clone(true); c.position.x = -n.position.x; c.scale.x = -n.scale.x; n.parent.add(c); continue; }
-    if (wd > 0.5 * dw) continue;   // déjà complet
-    for (const dx of how) { const c = n.clone(true); c.position.x += dx; n.parent.add(c); }
-  }
-}
-
 // retourne { group, parts, glb: true } ou null (modèle absent / pas encore chargé → construction procédurale)
 export function glbItem(p, procedural) {
   const e = modelEntry(p.model); if (!e) return null;
   const src = modelScene(p.model); if (!src) return null;
   const g = new THREE.Group(), w = src.clone(true), parts = [], mats = {};
-  completer(w, p.model, e.dims[0]);
   w.traverse((o) => {
     if (!o.isMesh) return;
     o.material = o.material.clone();   // les matériaux sont propres à chaque instance (découpe des murs, couleurs)

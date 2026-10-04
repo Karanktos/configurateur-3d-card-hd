@@ -1270,7 +1270,7 @@
     ]
    },
    "tris": 6556,
-   "kb": 214.2,
+   "kb": 217.9,
    "materials": [
     "tissu",
     "tissu2",
@@ -1308,7 +1308,7 @@
     ]
    },
    "tris": 5224,
-   "kb": 175.2,
+   "kb": 174.9,
    "materials": [
     "tissu",
     "tissu2",
@@ -1346,7 +1346,7 @@
     ]
    },
    "tris": 6088,
-   "kb": 201.8,
+   "kb": 203.4,
    "materials": [
     "tissu",
     "tissu2",
@@ -1383,8 +1383,8 @@
      "pieds"
     ]
    },
-   "tris": 4216,
-   "kb": 142.6,
+   "tris": 3784,
+   "kb": 128.5,
    "materials": [
     "tissu",
     "tissu2",
@@ -1422,7 +1422,7 @@
     ]
    },
    "tris": 7420,
-   "kb": 237.5,
+   "kb": 246.6,
    "materials": [
     "tissu",
     "tissu2",
@@ -1518,7 +1518,7 @@
     ]
    },
    "tris": 6032,
-   "kb": 195.2,
+   "kb": 195.7,
    "materials": [
     "bois",
     "couette",
@@ -1574,7 +1574,7 @@
     ]
    },
    "tris": 6032,
-   "kb": 195.3,
+   "kb": 195.8,
    "materials": [
     "bois",
     "couette",
@@ -1630,7 +1630,7 @@
     ]
    },
    "tris": 6032,
-   "kb": 195.6,
+   "kb": 196.0,
    "materials": [
     "bois",
     "couette",
@@ -2178,7 +2178,7 @@
     ]
    },
    "tris": 4636,
-   "kb": 220.1,
+   "kb": 220.0,
    "materials": [
     "buche",
     "pierre2",
@@ -2315,5 +2315,6 @@
   "file": "hdri/white_studio_05_1k.hdr",
   "intensity": 0.55,
   "source": "white_studio_05"
- }
+ },
+ "models_version": 2
 }

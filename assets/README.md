@@ -61,3 +61,7 @@ Les pivots sont **l'origine du nœud** : le mouvement se fait donc simplement en
 * Modélisation procédurale dans Blender, sans contrôle visuel direct (captures d'écran noires) : formes vérifiées par mesures et vues ASCII, mais le rendu final reste à juger dans HA. Les défauts de forme ou de proportion sont corrigeables modèle par modèle.
 * `canape_angle` et `salon_jardin` : méridienne côté +x uniquement. Pour la variante inverse, appliquer une échelle x = -1 sur le groupe.
 * Le `plante` est un feuillage stylisé de 38 feuilles ; remplaçable par un modèle Poly Haven plus riche plus tard.
+
+
+### Historique des modèles
+* **v2 (models_version 2)** : correction d'un défaut de génération qui ne laissait qu'**un seul coussin** par rangée. Désormais `canape2` (2 assises + 2 dossiers), `canape3` (3 + 3), `canape_angle` et `salon_jardin` (rangée complète + méridienne), lits `lit140/160/180` (2 oreillers symétriques), `fauteuil` (un coussin décoratif centré). **Tout contournement dans le code qui ajoutait ces coussins manquants doit être retiré**, sinon ils seront en double.
