@@ -20,4 +20,5 @@ jobs:
       - name: Créer la release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "$GITHUB_REF_NAME" release/* --title "$GITHUB_REF_NAME" --notes "Édition HD : carte + textures PBR et HDRI (Poly Haven, CC0), installées en local par HACS."
+        run: |
+          gh release create "$GITHUB_REF_NAME" release/* --title "$GITHUB_REF_NAME" --notes "Edition HD, carte + textures PBR et HDRI Poly Haven (CC0) installes en local par HACS."
