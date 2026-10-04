@@ -6,6 +6,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
 let C = null;   // { composer, render, gtao, w, h }
 const KEY = 'cfg3d-hd';
@@ -33,7 +34,10 @@ function create(renderer, scene, cam, skip) {
   // On ajoute la lumière du halo (couleur) sans toucher à l'opacité de l'image.
   const bm = bloom.blendMaterial; bm.blending = THREE.CustomBlending; bm.blendEquation = THREE.AddEquation;
   bm.blendSrc = THREE.SrcAlphaFactor; bm.blendDst = THREE.OneFactor; bm.blendSrcAlpha = THREE.ZeroFactor; bm.blendDstAlpha = THREE.OneFactor;
-  composer.addPass(render); composer.addPass(gtao); composer.addPass(bloom); composer.addPass(new OutputPass());
+  // léger contraste en sortie (après le passage en sRGB) : les ombres un peu plus profondes, les lumières un peu plus franches ; l'opacité n'est pas touchée
+  const contrast = new ShaderPass({ uniforms: { tDiffuse: { value: null }, k: { value: 1.07 } }, vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform sampler2D tDiffuse; uniform float k; varying vec2 vUv; void main() { vec4 c = texture2D(tDiffuse, vUv); gl_FragColor = vec4(clamp((c.rgb - 0.5) * k + 0.5, 0.0, 1.0), c.a); }' });
+  composer.addPass(render); composer.addPass(gtao); composer.addPass(bloom); composer.addPass(new OutputPass()); composer.addPass(contrast);
   return { composer, render, gtao, bloom, w: size.x, h: size.y };
 }
 

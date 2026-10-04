@@ -109,7 +109,8 @@ export const invalidate = (shadow = true) => { dirty = true; if (shadow) shadowD
 export function initScene(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });   // pas de preserveDrawingBuffer : la capture lit l'image juste après l'avoir dessinée
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false; // recalculées à la demande (invalidate)
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;   // + sun.shadow.radius : pénombre plus douce que PCFSoft
+  renderer.shadowMap.enabled = true; renderer.shadowMap.autoUpdate = false; // recalculées à la demande (invalidate)
   renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 0.9;   // rendu « Khronos PBR Neutral » : couleurs fidèles, plus naturelles que ACES renderer.setClearColor(0x000000, 0);
   const scene = new THREE.Scene(); scene.background = new THREE.Color('#dde6ee');
   const persp = new THREE.PerspectiveCamera(40, 1, 0.1, 400), ortho = new THREE.OrthographicCamera(-10, 10, 10, -10, -100, 200);
@@ -117,8 +118,8 @@ export function initScene(canvas) {
 
   const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.55; R.envK = 1; // reflets des métaux (inox, miroir) ; envK : facteur du HDRI du pack d'assets (voir setEnvironment)
-  const hemi = new THREE.HemisphereLight('#ffffff', '#b8c0c8', 0.95); scene.add(hemi); R.hemi = hemi;
-  const sun = new THREE.DirectionalLight('#fffaf3', 2.4); sun.position.set(8, 16, 10); sun.castShadow = true;
+  const hemi = new THREE.HemisphereLight('#fff8ef', '#b8c0c8', 0.95); scene.add(hemi); R.hemi = hemi;
+  const sun = new THREE.DirectionalLight('#fff3e4', 2.4); sun.position.set(8, 16, 10); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
   scene.add(sun, sun.target); R.sun = sun; shadowRes();
 
@@ -484,7 +485,7 @@ export function renderFloors() {
 }
 export function renderItem(it) {
   disposeEntity(objs.item, it.id);
-  const b = buildItem(it), g = new THREE.Group(); mergeStatic(b.group, b.parts); g.add(b.group);
+  const b = buildItem(it), g = new THREE.Group(); if (!b.glb) mergeStatic(b.group, b.parts); g.add(b.group);   // les GLB gardent leurs couleurs de sommets (ombres de contact cuites) : pas de fusion
   g.position.set(it.x, FLOOR_Y + (it.elev || 0), it.z); g.rotation.y = rad(it.rot || 0);
   tagRef(g, 'item', it.id); g.visible = itemVisible(it); root.item.add(g); objs.item.set(it.id, g); built.set('i' + it.id, keyOf(it, OMIT_I));
   if (cutApplied && cutItem(it)) clipTree(g, hidePlane);
@@ -567,13 +568,15 @@ export function rebuildAll() {
 export function rebuildStructure() { renderWalls(); renderOpenings(); renderFloors(); renderPlot(); updateLight(); drawSelection(); updateCutaway(); invalidate(); }
 // pack d'assets : la liste des matières disponibles vient de changer (manifest chargé, image introuvable) → tout est reconstruit une fois
 export function refreshAssets() { built.clear(); rebuildAll(); }
+// un modèle 3D vient d'arriver : reconstruire les meubles concernés
+export function refreshModel(id) { for (const it of S.items) if (it.model === id) built.delete('i' + it.id); renderItems(); invalidate(); }
 export function setEnvironment(env, intensity) {   // HDRI du pack : remplace RoomEnvironment pour les reflets/l'éclairage ambiant (pas le fond)
   const old = R.scene.environment; R.scene.environment = env; if (old && old !== env) old.dispose();
   R.envK = (intensity || 0.55) / 0.55; applySun(); invalidate();
 }
 export function startAssets(bases, skip) {
   if (![].concat(bases || []).filter(Boolean).length) return;
-  initAssets(bases, { change: refreshAssets, tex: () => invalidate() }, skip).then((ok) => { if (ok) loadHdri(R.renderer, setEnvironment); });
+  initAssets(bases, { change: refreshAssets, tex: () => invalidate(), model: refreshModel }, skip).then((ok) => { if (ok) loadHdri(R.renderer, setEnvironment); });
 }
 export function rebuildFloors() { renderFloors(); renderPlot(); drawSelection(); invalidate(); }
 
@@ -734,7 +737,9 @@ export function snapshotPNG() { R.renderer.shadowMap.needsUpdate = true; draw();
 export function setHD(on) { settings.hd = !!on; shadowRes(); invalidate(); }
 // carte d'ombre du soleil : 4096 px en rendu HD (ombres plus nettes), 2048 sinon
 function shadowRes() {
-  const n = settings.hd && !SMALLSCREEN ? 4096 : 2048, sh = R.sun && R.sun.shadow; if (!sh || sh.mapSize.x === n) return;
+  const n = settings.hd && !SMALLSCREEN ? 4096 : 2048, sh = R.sun && R.sun.shadow; if (!sh) return;
+  sh.radius = n > 2048 ? 3 : 2;   // ombres douces (le rayon est en texels de la carte d'ombre)
+  if (sh.mapSize.x === n) return;
   sh.mapSize.set(n, n); if (sh.map) { sh.map.dispose(); sh.map = null; }
 }
 
@@ -763,7 +768,7 @@ export function applySun() {
   if (!sun) return;
   const bg = (c) => { if (R.scene.background) R.scene.background.set(c); };
   if (sm.mode === 'off') {
-    R.sunDir = null; sun.color.set('#fffaf3'); sun.intensity = 2.4; R.hemi.intensity = 0.95; R.hemi.color.set('#ffffff'); R.hemi.groundColor.set('#b8c0c8');
+    R.sunDir = null; sun.color.set('#fff3e4'); sun.intensity = 2.4; R.hemi.intensity = 0.95; R.hemi.color.set('#fff8ef'); R.hemi.groundColor.set('#b8c0c8');
     R.scene.environmentIntensity = 0.55 * R.envK; R.renderer.toneMappingExposure = 0.9; bg('#dde6ee'); R.ground.material.color.set('#e7ecef');
     R.grid.material.opacity = 0.9; R.sunInfo = null; setLightGain(1); updateLight(); invalidate(); return;
   }
@@ -775,9 +780,9 @@ export function applySun() {
   // repère du plan : x vers la droite (est), z vers le bas (sud) ; nord du plan = z décroissant, décalé de « rot » degrés par rapport au vrai nord
   R.sunDir = new THREE.Vector3(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)).normalize();
   sun.intensity = L.sun;
-  if (L.useSun) { if (p.el < 8) sun.color.setRGB(1, 0.5, 0.25).lerp(cA.setRGB(1, 0.69, 0.44), cl01(p.el / 8)); else sun.color.setRGB(1, 0.69, 0.44).lerp(cA.set('#fffaf0'), cl01((p.el - 8) / 17)); }
+  if (L.useSun) { if (p.el < 8) sun.color.setRGB(1, 0.5, 0.25).lerp(cA.setRGB(1, 0.69, 0.44), cl01(p.el / 8)); else sun.color.setRGB(1, 0.69, 0.44).lerp(cA.set('#fff2e2'), cl01((p.el - 8) / 17)); }
   else sun.color.set('#8fa6d6');
-  R.hemi.intensity = L.hemi; R.hemi.color.copy(cA.set('#3a4a6a')).lerp(cB.set('#f4f7ff'), L.t).lerp(cB.setRGB(1, 0.72, 0.5), 0.28 * L.tw);
+  R.hemi.intensity = L.hemi; R.hemi.color.copy(cA.set('#3a4a6a')).lerp(cB.set('#fff6ea'), L.t).lerp(cB.setRGB(1, 0.72, 0.5), 0.28 * L.tw);
   R.hemi.groundColor.copy(cA.set('#141c26')).lerp(cB.set('#b8c0c8'), L.t);
   R.scene.environmentIntensity = L.env * R.envK; R.renderer.toneMappingExposure = L.exposure * 0.95;
   if (R.scene.background) R.scene.background.copy(cA.set('#0b1220')).lerp(cB.set('#dde6ee'), L.t).lerp(cB.setRGB(1, 0.62, 0.42), 0.25 * L.tw);
@@ -809,7 +814,7 @@ export function setPresent(on) {
     settings.view = '3d'; settings.camOrtho = !(S.meta && S.meta.view && S.meta.view.persp); settings.free = false; settings.wallMode = S.meta && S.meta.view && S.meta.view.persp ? 'auto' : 'haut';   // vue de l'éditeur reprise : murs coupés comme dans l'éditeur
     R.ground.visible = R.grid.visible = R.grid5.visible = false; R.scene.background = null;
     if (!S.meta.plot && S.meta.plot !== false && structBounds()) S.meta.plot = true;
-    topMat.color.set('#6f685e'); renderPlot(); resetView();
+    topMat.color.set('#d9d4cb'); renderPlot(); resetView();   // dessus des murs clair (pas de chapeau sombre)
     setSun({ mode: settings.sun.mode === 'sim' ? 'sim' : 'live', force: null });
   } else {
     const b = beforePresent || {};

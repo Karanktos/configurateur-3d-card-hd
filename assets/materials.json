@@ -7,7 +7,8 @@
   "arm": "R = occlusion ambiante, V = rugosite, B = metal (0). Non-Color. Brancher R sur aoMap, V sur roughnessMap (multiplier par 'roughness').",
   "size": "metres couverts par UNE repetition de la texture (u = x_monde / size[0], v = z_monde / size[1])",
   "pose": "true = le calepinage (dalles + joints) est deja dans l'image : desactiver quinconce/pose du moteur pour cette matiere. Rotation 'sens' et echelle restent possibles.",
-  "res": "1k par defaut (dir) ; variante mobile 512 px dans dir512 (memes noms de fichiers)"
+  "res": "1k par defaut (dir) ; variante mobile 512 px dans dir512 (memes noms de fichiers)",
+  "models": "GLB sans texture embarquee, unites metres, origine centre-bas, face avant = +Z glTF, dimensions = 'dims' (defauts du catalogue), aucune lumiere ni camera. COLOR_0 = occlusion ambiante cuite (gris) : material.vertexColors = true. UV en metres (projection boite) : 'texMap' relie un nom de materiau a une texture du pack (repeat = 1/size). 'slots' relie c1..c3 a des noms de materiaux (a recaler avec docs/IMPORT-IA.md)."
  },
  "floors": {
   "parquet": "floor-parquet",
@@ -1249,7 +1250,1067 @@
    "source": "granite_wall"
   }
  },
- "models": {},
+ "models": {
+  "canape_angle": {
+   "file": "models/canape_angle.glb",
+   "dims": [
+    2.6,
+    1.7,
+    0.82
+   ],
+   "slots": {
+    "c1": [
+     "tissu"
+    ],
+    "c2": [
+     "tissu2"
+    ],
+    "c3": [
+     "pieds"
+    ]
+   },
+   "tris": 6556,
+   "kb": 214.2,
+   "materials": [
+    "tissu",
+    "tissu2",
+    "pieds"
+   ],
+   "nodes": [
+    "assises",
+    "coussins",
+    "dossiers",
+    "pieds",
+    "socle"
+   ],
+   "anims": [],
+   "texMap": {
+    "tissu": "misc-tissu",
+    "tissu2": "misc-tissu"
+   }
+  },
+  "canape2": {
+   "file": "models/canape2.glb",
+   "dims": [
+    1.6,
+    0.9,
+    0.82
+   ],
+   "slots": {
+    "c1": [
+     "tissu"
+    ],
+    "c2": [
+     "tissu2"
+    ],
+    "c3": [
+     "pieds"
+    ]
+   },
+   "tris": 5224,
+   "kb": 175.2,
+   "materials": [
+    "tissu",
+    "tissu2",
+    "pieds"
+   ],
+   "nodes": [
+    "assises",
+    "coussins",
+    "dossiers",
+    "pieds",
+    "socle"
+   ],
+   "anims": [],
+   "texMap": {
+    "tissu": "misc-tissu",
+    "tissu2": "misc-tissu"
+   }
+  },
+  "canape3": {
+   "file": "models/canape3.glb",
+   "dims": [
+    2.1,
+    0.92,
+    0.82
+   ],
+   "slots": {
+    "c1": [
+     "tissu"
+    ],
+    "c2": [
+     "tissu2"
+    ],
+    "c3": [
+     "pieds"
+    ]
+   },
+   "tris": 6088,
+   "kb": 201.8,
+   "materials": [
+    "tissu",
+    "tissu2",
+    "pieds"
+   ],
+   "nodes": [
+    "assises",
+    "coussins",
+    "dossiers",
+    "pieds",
+    "socle"
+   ],
+   "anims": [],
+   "texMap": {
+    "tissu": "misc-tissu",
+    "tissu2": "misc-tissu"
+   }
+  },
+  "fauteuil": {
+   "file": "models/fauteuil.glb",
+   "dims": [
+    0.85,
+    0.88,
+    0.84
+   ],
+   "slots": {
+    "c1": [
+     "tissu"
+    ],
+    "c2": [
+     "tissu2"
+    ],
+    "c3": [
+     "pieds"
+    ]
+   },
+   "tris": 4216,
+   "kb": 142.6,
+   "materials": [
+    "tissu",
+    "tissu2",
+    "pieds"
+   ],
+   "nodes": [
+    "assises",
+    "coussins",
+    "dossiers",
+    "pieds",
+    "socle"
+   ],
+   "anims": [],
+   "texMap": {
+    "tissu": "misc-tissu",
+    "tissu2": "misc-tissu"
+   }
+  },
+  "salon_jardin": {
+   "file": "models/salon_jardin.glb",
+   "dims": [
+    3.0,
+    2.4,
+    0.8
+   ],
+   "slots": {
+    "c1": [
+     "bois"
+    ],
+    "c2": [
+     "tissu"
+    ],
+    "c3": [
+     "tissu2"
+    ]
+   },
+   "tris": 7420,
+   "kb": 237.5,
+   "materials": [
+    "tissu",
+    "tissu2",
+    "pieds",
+    "bois"
+   ],
+   "nodes": [
+    "assises",
+    "coussins",
+    "dossiers",
+    "pieds",
+    "socle"
+   ],
+   "anims": [],
+   "texMap": {
+    "bois": "misc-bois",
+    "tissu": "misc-tissu",
+    "tissu2": "misc-tissu"
+   }
+  },
+  "lit90": {
+   "file": "models/lit90.glb",
+   "dims": [
+    0.98,
+    2.0,
+    0.85
+   ],
+   "slots": {
+    "c1": [
+     "tissu"
+    ],
+    "c2": [
+     "couette"
+    ],
+    "c3": [
+     "plaid"
+    ]
+   },
+   "tris": 5444,
+   "kb": 177.5,
+   "materials": [
+    "bois",
+    "couette",
+    "matelas",
+    "linge",
+    "plaid",
+    "tissu"
+   ],
+   "nodes": [
+    "cadre",
+    "couette",
+    "matelas",
+    "oreillers",
+    "plaid",
+    "tete"
+   ],
+   "fin": {
+    "bois": "cadre"
+   },
+   "anims": [
+    {
+     "node": "couette",
+     "type": "scale",
+     "axis": "z",
+     "from": 1.0,
+     "to": 0.45
+    }
+   ],
+   "texMap": {
+    "bois": "misc-bois",
+    "tissu": "misc-tissu",
+    "couette": "misc-tissu",
+    "linge": "misc-tissu",
+    "plaid": "misc-laine"
+   }
+  },
+  "lit140": {
+   "file": "models/lit140.glb",
+   "dims": [
+    1.48,
+    2.05,
+    0.95
+   ],
+   "slots": {
+    "c1": [
+     "tissu"
+    ],
+    "c2": [
+     "couette"
+    ],
+    "c3": [
+     "plaid"
+    ]
+   },
+   "tris": 6032,
+   "kb": 195.2,
+   "materials": [
+    "bois",
+    "couette",
+    "matelas",
+    "linge",
+    "plaid",
+    "tissu"
+   ],
+   "nodes": [
+    "cadre",
+    "couette",
+    "matelas",
+    "oreillers",
+    "plaid",
+    "tete"
+   ],
+   "fin": {
+    "bois": "cadre"
+   },
+   "anims": [
+    {
+     "node": "couette",
+     "type": "scale",
+     "axis": "z",
+     "from": 1.0,
+     "to": 0.45
+    }
+   ],
+   "texMap": {
+    "bois": "misc-bois",
+    "tissu": "misc-tissu",
+    "couette": "misc-tissu",
+    "linge": "misc-tissu",
+    "plaid": "misc-laine"
+   }
+  },
+  "lit160": {
+   "file": "models/lit160.glb",
+   "dims": [
+    1.68,
+    2.1,
+    1.05
+   ],
+   "slots": {
+    "c1": [
+     "tissu"
+    ],
+    "c2": [
+     "couette"
+    ],
+    "c3": [
+     "plaid"
+    ]
+   },
+   "tris": 6032,
+   "kb": 195.3,
+   "materials": [
+    "bois",
+    "couette",
+    "matelas",
+    "linge",
+    "plaid",
+    "tissu"
+   ],
+   "nodes": [
+    "cadre",
+    "couette",
+    "matelas",
+    "oreillers",
+    "plaid",
+    "tete"
+   ],
+   "fin": {
+    "bois": "cadre"
+   },
+   "anims": [
+    {
+     "node": "couette",
+     "type": "scale",
+     "axis": "z",
+     "from": 1.0,
+     "to": 0.45
+    }
+   ],
+   "texMap": {
+    "bois": "misc-bois",
+    "tissu": "misc-tissu",
+    "couette": "misc-tissu",
+    "linge": "misc-tissu",
+    "plaid": "misc-laine"
+   }
+  },
+  "lit180": {
+   "file": "models/lit180.glb",
+   "dims": [
+    1.88,
+    2.1,
+    1.05
+   ],
+   "slots": {
+    "c1": [
+     "tissu"
+    ],
+    "c2": [
+     "couette"
+    ],
+    "c3": [
+     "plaid"
+    ]
+   },
+   "tris": 6032,
+   "kb": 195.6,
+   "materials": [
+    "bois",
+    "couette",
+    "matelas",
+    "linge",
+    "plaid",
+    "tissu"
+   ],
+   "nodes": [
+    "cadre",
+    "couette",
+    "matelas",
+    "oreillers",
+    "plaid",
+    "tete"
+   ],
+   "fin": {
+    "bois": "cadre"
+   },
+   "anims": [
+    {
+     "node": "couette",
+     "type": "scale",
+     "axis": "z",
+     "from": 1.0,
+     "to": 0.45
+    }
+   ],
+   "texMap": {
+    "bois": "misc-bois",
+    "tissu": "misc-tissu",
+    "couette": "misc-tissu",
+    "linge": "misc-tissu",
+    "plaid": "misc-laine"
+   }
+  },
+  "table": {
+   "file": "models/table.glb",
+   "dims": [
+    1.6,
+    0.9,
+    0.75
+   ],
+   "slots": {
+    "c1": [
+     "bois"
+    ]
+   },
+   "tris": 2848,
+   "kb": 99.4,
+   "materials": [
+    "bois"
+   ],
+   "nodes": [
+    "corps"
+   ],
+   "anims": [],
+   "texMap": {
+    "bois": "misc-bois"
+   }
+  },
+  "chaise": {
+   "file": "models/chaise.glb",
+   "dims": [
+    0.45,
+    0.5,
+    0.88
+   ],
+   "slots": {
+    "c1": [
+     "bois"
+    ],
+    "c2": [
+     "assise"
+    ]
+   },
+   "tris": 2076,
+   "kb": 78.3,
+   "materials": [
+    "assise",
+    "bois"
+   ],
+   "nodes": [
+    "assise",
+    "corps"
+   ],
+   "anims": [],
+   "texMap": {
+    "bois": "misc-bois",
+    "assise": "misc-tissu"
+   }
+  },
+  "tabouret": {
+   "file": "models/tabouret.glb",
+   "dims": [
+    0.38,
+    0.38,
+    0.75
+   ],
+   "slots": {
+    "c1": [
+     "bois"
+    ]
+   },
+   "tris": 932,
+   "kb": 38.2,
+   "materials": [
+    "bois"
+   ],
+   "nodes": [
+    "corps"
+   ],
+   "anims": [],
+   "texMap": {
+    "bois": "misc-bois"
+   }
+  },
+  "chaise_bar": {
+   "file": "models/chaise_bar.glb",
+   "dims": [
+    0.42,
+    0.45,
+    1.0
+   ],
+   "slots": {
+    "c1": [
+     "bois"
+    ]
+   },
+   "tris": 1376,
+   "kb": 55.2,
+   "materials": [
+    "bois"
+   ],
+   "nodes": [
+    "corps"
+   ],
+   "anims": [],
+   "texMap": {
+    "bois": "misc-bois"
+   }
+  },
+  "ilot": {
+   "file": "models/ilot.glb",
+   "dims": [
+    1.8,
+    0.9,
+    0.92
+   ],
+   "slots": {
+    "c1": [
+     "facade"
+    ],
+    "c2": [
+     "plan"
+    ],
+    "c3": [
+     "pieds"
+    ]
+   },
+   "tris": 3992,
+   "kb": 143.0,
+   "materials": [
+    "facade",
+    "plan",
+    "pieds"
+   ],
+   "nodes": [
+    "corps",
+    "plan",
+    "socle",
+    "tiroir_1",
+    "tiroir_2",
+    "tiroir_3"
+   ],
+   "anims": [
+    {
+     "node": "tiroir_1",
+     "type": "slide",
+     "by": [
+      0,
+      0,
+      0.3
+     ]
+    },
+    {
+     "node": "tiroir_2",
+     "type": "slide",
+     "by": [
+      0,
+      0,
+      0.3
+     ]
+    },
+    {
+     "node": "tiroir_3",
+     "type": "slide",
+     "by": [
+      0,
+      0,
+      0.3
+     ]
+    }
+   ],
+   "texMap": {
+    "plan": "floor-marbre"
+   }
+  },
+  "baignoire": {
+   "file": "models/baignoire.glb",
+   "dims": [
+    1.7,
+    0.75,
+    0.58
+   ],
+   "slots": {
+    "c1": [
+     "ceramique"
+    ],
+    "c2": [
+     "chrome"
+    ]
+   },
+   "tris": 976,
+   "kb": 36.9,
+   "materials": [
+    "ceramique",
+    "chrome"
+   ],
+   "nodes": [
+    "cuve",
+    "robinet"
+   ],
+   "anims": [],
+   "texMap": {}
+  },
+  "meubletv": {
+   "file": "models/meubletv.glb",
+   "dims": [
+    1.6,
+    0.4,
+    0.5
+   ],
+   "slots": {
+    "c1": [
+     "bois"
+    ],
+    "c2": [
+     "bois2"
+    ]
+   },
+   "tris": 2044,
+   "kb": 80.5,
+   "materials": [
+    "bois",
+    "bois2"
+   ],
+   "nodes": [
+    "corps",
+    "porte_1",
+    "porte_2",
+    "porte_3"
+   ],
+   "anims": [
+    {
+     "node": "porte_1",
+     "type": "rot",
+     "axis": "y",
+     "angle": -1.75
+    },
+    {
+     "node": "porte_2",
+     "type": "rot",
+     "axis": "y",
+     "angle": -1.75
+    },
+    {
+     "node": "porte_3",
+     "type": "rot",
+     "axis": "y",
+     "angle": 1.75
+    }
+   ],
+   "texMap": {
+    "bois": "misc-bois",
+    "bois2": "misc-bois"
+   }
+  },
+  "tv": {
+   "file": "models/tv.glb",
+   "dims": [
+    1.25,
+    0.2,
+    0.75
+   ],
+   "slots": {},
+   "tris": 348,
+   "kb": 17.3,
+   "materials": [
+    "tv_noir",
+    "ecran"
+   ],
+   "nodes": [
+    "corps",
+    "ecran"
+   ],
+   "anims": [],
+   "glow": [
+    {
+     "material": "ecran",
+     "color": "#bcd4ff",
+     "intensity": 0.9
+    }
+   ],
+   "texMap": {}
+  },
+  "tablebasse": {
+   "file": "models/tablebasse.glb",
+   "dims": [
+    1.0,
+    0.55,
+    0.42
+   ],
+   "slots": {
+    "c1": [
+     "bois"
+    ]
+   },
+   "tris": 1744,
+   "kb": 61.1,
+   "materials": [
+    "bois"
+   ],
+   "nodes": [
+    "corps"
+   ],
+   "anims": [],
+   "texMap": {
+    "bois": "misc-bois"
+   }
+  },
+  "tapis": {
+   "file": "models/tapis.glb",
+   "dims": [
+    2.0,
+    3.0,
+    0.015
+   ],
+   "slots": {
+    "c1": [
+     "laine"
+    ],
+    "c2": [
+     "laine2"
+    ]
+   },
+   "tris": 152,
+   "kb": 12.8,
+   "materials": [
+    "laine",
+    "laine2"
+   ],
+   "nodes": [
+    "base",
+    "champ"
+   ],
+   "anims": [],
+   "texMap": {
+    "laine": "misc-laine",
+    "laine2": "misc-laine"
+   }
+  },
+  "chevet": {
+   "file": "models/chevet.glb",
+   "dims": [
+    0.45,
+    0.4,
+    0.5
+   ],
+   "slots": {
+    "c1": [
+     "bois"
+    ],
+    "c2": [
+     "bois2"
+    ],
+    "c3": [
+     "metal"
+    ]
+   },
+   "tris": 2156,
+   "kb": 87.1,
+   "materials": [
+    "bois",
+    "metal",
+    "bois2"
+   ],
+   "nodes": [
+    "corps",
+    "poignee",
+    "tiroir_1"
+   ],
+   "anims": [
+    {
+     "node": "tiroir_1",
+     "type": "slide",
+     "by": [
+      0,
+      0,
+      0.26
+     ]
+    }
+   ],
+   "texMap": {
+    "bois": "misc-bois",
+    "bois2": "misc-bois"
+   }
+  },
+  "lampe_poser": {
+   "file": "models/lampe_poser.glb",
+   "dims": [
+    0.25,
+    0.25,
+    0.45
+   ],
+   "slots": {
+    "c1": [
+     "abatjour"
+    ],
+    "c2": [
+     "ceramique2"
+    ],
+    "c3": [
+     "metal"
+    ]
+   },
+   "tris": 868,
+   "kb": 33.8,
+   "materials": [
+    "abatjour",
+    "metal",
+    "ceramique2"
+   ],
+   "nodes": [
+    "abatjour",
+    "ampoule",
+    "douille",
+    "pied"
+   ],
+   "anims": [],
+   "glow": [
+    {
+     "material": "abatjour",
+     "color": "#ffcf80",
+     "intensity": 1.4
+    }
+   ],
+   "light": {
+    "node": "ampoule",
+    "color": "#ffd9a0"
+   },
+   "texMap": {}
+  },
+  "plante": {
+   "file": "models/plante.glb",
+   "dims": [
+    0.5,
+    0.5,
+    1.3
+   ],
+   "slots": {
+    "c1": [
+     "feuille"
+    ],
+    "c2": [
+     "pot"
+    ]
+   },
+   "tris": 808,
+   "kb": 43.2,
+   "materials": [
+    "feuille",
+    "pot",
+    "terre"
+   ],
+   "nodes": [
+    "feuilles",
+    "pot",
+    "terre"
+   ],
+   "anims": [],
+   "texMap": {}
+  },
+  "voiture1": {
+   "file": "models/voiture1.glb",
+   "dims": [
+    1.72,
+    4.06,
+    1.4
+   ],
+   "slots": {
+    "c1": [
+     "carrosserie"
+    ],
+    "c2": [
+     "jante"
+    ]
+   },
+   "tris": 2736,
+   "kb": 113.4,
+   "materials": [
+    "carrosserie",
+    "vitre",
+    "feu_ar",
+    "plastique",
+    "jante",
+    "phare",
+    "pneu"
+   ],
+   "nodes": [
+    "carrosserie",
+    "feux",
+    "grille",
+    "jantes",
+    "phares",
+    "pneus"
+   ],
+   "lock": true,
+   "anims": [],
+   "texMap": {}
+  },
+  "barbecue": {
+   "file": "models/barbecue.glb",
+   "dims": [
+    1.2,
+    0.6,
+    1.05
+   ],
+   "slots": {
+    "c1": [
+     "pierre"
+    ],
+    "c2": [
+     "pierre2"
+    ]
+   },
+   "tris": 4636,
+   "kb": 220.1,
+   "materials": [
+    "buche",
+    "pierre2",
+    "metal",
+    "mortier",
+    "pierre",
+    "suie"
+   ],
+   "nodes": [
+    "buches",
+    "couronne",
+    "grille",
+    "noyau",
+    "pierres",
+    "suie"
+   ],
+   "anims": [],
+   "texMap": {
+    "pierre": "wall-pierre",
+    "pierre2": "wall-pierre"
+   }
+  },
+  "chauffeeau": {
+   "file": "models/chauffeeau.glb",
+   "dims": [
+    0.55,
+    0.55,
+    1.6
+   ],
+   "slots": {
+    "c1": [
+     "blanc"
+    ]
+   },
+   "tris": 1056,
+   "kb": 40.4,
+   "materials": [
+    "blanc",
+    "led",
+    "metal"
+   ],
+   "nodes": [
+    "cuve",
+    "led",
+    "tuyaux"
+   ],
+   "lock": true,
+   "anims": [],
+   "glow": [
+    {
+     "material": "led",
+     "color": "#6fd16f",
+     "intensity": 2.0
+    }
+   ],
+   "texMap": {}
+  },
+  "lavelinge": {
+   "file": "models/lavelinge.glb",
+   "dims": [
+    0.6,
+    0.6,
+    0.85
+   ],
+   "slots": {
+    "c1": [
+     "blanc"
+    ]
+   },
+   "tris": 1036,
+   "kb": 40.2,
+   "materials": [
+    "metal",
+    "pieds",
+    "blanc",
+    "vitre"
+   ],
+   "nodes": [
+    "anneau",
+    "bandeau",
+    "caisson",
+    "porte"
+   ],
+   "lock": true,
+   "anims": [
+    {
+     "node": "porte",
+     "type": "rot",
+     "axis": "y",
+     "angle": -1.6
+    }
+   ],
+   "texMap": {}
+  },
+  "seche": {
+   "file": "models/seche.glb",
+   "dims": [
+    0.6,
+    0.6,
+    0.85
+   ],
+   "slots": {
+    "c1": [
+     "blanc"
+    ]
+   },
+   "tris": 1036,
+   "kb": 40.2,
+   "materials": [
+    "metal",
+    "pieds",
+    "blanc",
+    "vitre"
+   ],
+   "nodes": [
+    "anneau",
+    "bandeau",
+    "caisson",
+    "porte"
+   ],
+   "lock": true,
+   "anims": [
+    {
+     "node": "porte",
+     "type": "rot",
+     "axis": "y",
+     "angle": -1.6
+    }
+   ],
+   "texMap": {}
+  }
+ },
  "hdri": {
   "file": "hdri/white_studio_05_1k.hdr",
   "intensity": 0.55,

@@ -1,7 +1,7 @@
 # Pack d'assets réalistes pour le Configurateur 3D (v1)
 
 Textures PBR et HDRI issus de **Poly Haven (CC0)**, préparés avec Blender. Phase 1 : sols, murs, textures de meubles, HDRI.
-Les modèles 3D (GLB) viennent en phase 2 : `models` est vide dans `materials.json` pour l'instant.
+Phase 2 (livrée) : 27 modèles 3D GLB de meubles dans `models/`, décrits dans `materials.json > models`.
 
 ## Contenu
 ```
@@ -33,3 +33,31 @@ Clés : `floor-<mat>` (40 sols, tous les ids du champ "mat" sauf `uni`), `wall-<
 ## Limites connues de cette version
 * Aucun contrôle visuel n'a été possible côté Blender pendant la fabrication (pas de rendu d'écran) : les choix de textures reposent sur les étiquettes Poly Haven et des mesures (couleur moyenne, détection de joints). Quelques matières peuvent demander un remplacement ; la clé et la source (`source`) de chacune sont dans `materials.json` et `CREDITS.md`.
 * Les sols à dalles reconstitués utilisent une pierre de base répétée en miroir et recadrée hors joints.
+
+
+## Modèles 3D (GLB) — 27 ids du catalogue
+`baignoire`, `barbecue`, `canape2`, `canape3`, `canape_angle`, `chaise`, `chaise_bar`, `chauffeeau`, `chevet`, `fauteuil`, `ilot`, `lampe_poser`, `lavelinge`, `lit140`, `lit160`, `lit180`, `lit90`, `meubletv`, `plante`, `salon_jardin`, `seche`, `table`, `tablebasse`, `tabouret`, `tapis`, `tv`, `voiture1`
+
+Ils remplacent la version procédurale **uniquement** pour ces ids ; tout le reste du catalogue (cuisine K, portes, fenêtres, etc.) reste procédural. Repli procédural obligatoire si un GLB est absent ou invalide.
+
+### Conventions
+* Unités : mètres. Origine : **centre de l'emprise, au sol** (z = 0). **Face avant = +Z glTF** (= -Y dans Blender). Compatible avec le repère du moteur (rot 0 = face avant vers le sud).
+* Dimensions du GLB = **dimensions par défaut du catalogue** (`dims` = largeur, profondeur, hauteur). À mettre à l'échelle (p.w/dims[0], p.h/dims[2], p.d/dims[1]) ; non uniforme possible, mais préférer les ids `lock` à ±10 %.
+* **Aucune lumière, caméra ni texture embarquée.** Matériaux nommés (liste dans `models.<id>.materials`). Cloner les matériaux par instance (découpe « murs coupés » écrit des clippingPlanes).
+* `COLOR_0` = **occlusion ambiante cuite** (niveau de gris, multiplicative). `GLTFLoader` active `material.vertexColors` tout seul ; ne pas le désactiver, c'est ce qui donne les ombres de contact sous et entre les meubles. Ne pas passer ces GLB dans `mergeStatic` (il supprime les couleurs de sommets).
+* UV en mètres (projection par boîte). Facultatif : `texMap` relie un nom de matériau à une texture du pack (`misc-bois`, `misc-tissu`, `floor-marbre`…) ; appliquer `map`/`normalMap`/`aoMap` avec `repeat = 1 / size`. Sinon, garder la couleur unie du matériau.
+* **Couleurs c1..c3** : `slots` relie c1/c2/c3 à des noms de matériaux (couleur utilisateur × couleur du matériau). Mon découpage est une proposition : **recaler avec la colonne « couleurs » de docs/IMPORT-IA.md** (ex. si c2 = pieds pour un canapé, échanger).
+* **Finition** (`fin`) : pour les lits, le matériau `cadre` suit mat/bois/brillant.
+
+### Animations (valeur 0 → 1 par instance, comme `js/anim.js`)
+Les pivots sont **l'origine du nœud** : le mouvement se fait donc simplement en appliquant la transformation sur le nœud nommé. Les angles sont en radians autour de l'axe Y de three.js ; **le signe est choisi pour ouvrir vers l'avant (+Z)** : si le sens est inversé chez toi, inverser le signe globalement.
+* `rot` : `meubletv` (porte_1, porte_2 charnière à gauche, angle négatif ; porte_3 charnière à droite, angle positif), `lavelinge` et `seche` (hublot `porte`).
+* `slide` (`by` = déplacement en mètres, +Z = vers l'avant) : tiroirs `tiroir_1..3` de `ilot`, `tiroir_1` de `chevet`.
+* `scale` : nœud `couette` des lits, `axis: z` de 1 vers 0,45, **pivot à la tête du lit** (la couette se replie vers l'oreiller).
+* `glow` (matériau émissif, `color`/`intensity` pour le niveau 1) : `tv` (matériau `ecran`), `lampe_poser` (`abatjour`), `chauffeeau` (`led`). Emissif à 0 par défaut dans le GLB.
+* `light` : `lampe_poser` expose un nœud vide `ampoule` ; y accrocher la PointLight du moteur (la lampe de la carte, jamais dans le GLB).
+
+### Limites
+* Modélisation procédurale dans Blender, sans contrôle visuel direct (captures d'écran noires) : formes vérifiées par mesures et vues ASCII, mais le rendu final reste à juger dans HA. Les défauts de forme ou de proportion sont corrigeables modèle par modèle.
+* `canape_angle` et `salon_jardin` : méridienne côté +x uniquement. Pour la variante inverse, appliquer une échelle x = -1 sur le groupe.
+* Le `plante` est un feuillage stylisé de 38 feuilles ; remplaçable par un modèle Poly Haven plus riche plus tard.

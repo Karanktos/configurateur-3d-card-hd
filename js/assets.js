@@ -5,10 +5,11 @@
 //   * 1k sur ordinateur, 512 sur petit écran (ou si les fichiers 1k sont absents : décision unique par sondage d'un fichier).
 import * as THREE from 'three';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const SMALL = Math.min(screen.width, screen.height) < 700;
 export const A = { base: '', q: '', flat: false, man: null, ready: false, res: SMALL ? '512' : '1k', failed: new Set() };
-const hooks = { change: () => {}, tex: () => {} };   // change : la liste des matières utilisables a changé (reconstruire) ; tex : une image vient d'arriver (redessiner)
+const hooks = { change: () => {}, tex: () => {}, model: () => {} };   // change : la liste des matières utilisables a changé (reconstruire) ; tex : une image vient d'arriver (redessiner)
 const reg = new Map();   // clé -> { st: 'idle'|'load'|'ready'|'fail', t: { color, normal, arm }, users: [[matériau, mode]], mclone }
 
 // Unités de texture occupées par une matière PBR dans le shader : color, normal, ao, rugosité. Le fichier arm.jpg sert à la fois d'aoMap et de
@@ -16,6 +17,7 @@ const reg = new Map();   // clé -> { st: 'idle'|'load'|'ready'|'fail', t: { col
 export const PBR_UNITS = 4;
 const AO_K = 0.7;   // l'occlusion cuite dans arm.jpg est marquée (moyenne 0,65 à 0,99) : atténuée pour ne pas ternir les sols
 
+export const assetUrl = (rel) => url(rel);
 export const pbrActive = () => !!(A.ready && A.man);
 const entryOf = (k) => (A.ready && A.man && !A.failed.has(k) && A.man.textures && A.man.textures[k]) || null;
 const keyFrom = (tbl, id) => { const k = A.man && A.man[tbl] && A.man[tbl][id]; return k && entryOf(k) ? 'pbr:' + k : null; };
@@ -130,4 +132,28 @@ export function loadHdri(renderer, onEnv) {
     const pm = new THREE.PMREMGenerator(renderer), env = pm.fromEquirectangular(tex).texture;
     tex.dispose(); pm.dispose(); onEnv(env, h.intensity);
   }, undefined, (e) => { console.warn('HDRI', e && e.message); /* absent : on garde RoomEnvironment */ });
+}
+
+// attache une matière du manifest (clé « misc-bois », « floor-marbre »…) à un matériau de modèle 3D : UV en mètres → répétition 1/size
+export function attachKey(m, k) {
+  if (!entryOf(k)) return m;
+  const r = ensure(k);
+  if (r.st === 'ready') applyMaps(m, k, 'm'); else r.users.push([m, 'm']);
+  return m;
+}
+
+// ---- modèles 3D (GLB sans compression) : chargés à la demande, repli sur la construction procédurale tant qu'ils ne sont pas là ----
+const gl = new Map();   // id -> { st: 'load'|'ready'|'fail', scene }
+export const modelEntry = (id) => (A.ready && A.man && A.man.models && A.man.models[id]) || null;
+export function modelScene(id) {
+  const e = modelEntry(id); if (!e) return null;
+  let r = gl.get(id);
+  if (!r) {
+    r = { st: 'load', scene: null }; gl.set(id, r);
+    new GLTFLoader().load(url(e.file), (g) => {
+      g.scene.traverse((o) => { if (o.geometry) o.geometry.userData.shared = true; });   // partagée entre les instances : ne pas la libérer avec un meuble
+      r.scene = g.scene; r.st = 'ready'; hooks.model(id);
+    }, undefined, () => { r.st = 'fail'; });
+  }
+  return r.st === 'ready' ? r.scene : null;
 }

@@ -8,6 +8,7 @@ import { addPart } from './anim.js';
 import { registerKitchen, KDEF, KSTYLE_KEYS } from './kitchen.js';
 import { registerMore } from './catalog3.js';
 import { registerIkea } from './catalog4.js';
+import { glbItem } from './models.js';
 
 export const CATS = ['Chambre', 'Salon', 'Salle à manger', 'Cuisine', 'Électroménager', 'Salle de bain', 'Bureau', 'Éclairage', 'Déco', 'Extérieur'];
 export const FINS = [['mat', 'Laqué mat'], ['bois', 'Bois / décor'], ['brillant', 'Brillant']];
@@ -132,7 +133,11 @@ function kit(g, p) {
 }
 
 export function buildItem(p) {
-  const def = DEFS[p.model], g = new THREE.Group(), K = kit(g, p);
+  const def = DEFS[p.model];
+  // modèle 3D du pack d'assets s'il est disponible (sinon construction procédurale ci-dessous)
+  const gl = glbItem(p, () => { const g2 = new THREE.Group(), K2 = kit(g2, p); def.build(g2, p, K2); return { group: g2, parts: K2.parts }; });
+  if (gl) return gl;
+  const g = new THREE.Group(), K = kit(g, p);
   def.build(g, p, K);
   return { group: g, parts: K.parts };
 }
