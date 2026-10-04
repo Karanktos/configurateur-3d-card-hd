@@ -43,3 +43,15 @@ export function lighting(el) {
 }
 export const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSO', 'SO', 'OSO', 'O', 'ONO', 'NO', 'NNO'];
 export const compass = (az) => COMPASS[Math.round(az / 22.5) % 16];
+
+// style « sobre » : mêmes courbes que plan-3d-live-card (hémisphère, ambiance, soleil, lune, exposition), valeurs dans style.js.
+// eve ∈ [0,1] : ambiance de soirée (soleil ramené à -3° sous l'horizon) quand des lumières sont allumées.
+const lp = (a, b, t) => a + (b - a) * t;
+export function lightingSobre(el, P, eve = 0) {
+  const e = eve ? el + (-3 - el) * eve : el, L = P.L, t = sm(-10, 8, e), useSun = e > -0.75;
+  return {
+    t, useSun, tw: Math.max(0, 1 - Math.abs(e - 1) / 7),
+    sun: useSun ? L.sun * Math.pow(sm(-0.5, 12, e), 0.7) : L.moon * sm(0, 1, cl((-1 - e) / 8, 0, 1)),
+    hemi: lp(L.hemiN, L.hemiD, t), amb: lp(L.ambN, L.ambD, t), env: lp(L.envN, L.envD, t), exposure: lp(L.expN, L.expD, t),
+  };
+}

@@ -74,6 +74,17 @@ height: 700px
 Le configurateur s'ouvre avec un petit appartement d'exemple (lumières et capteurs non reliés : cliquez sur un élément puis choisissez l'entité dans le panneau de droite).
 Les plans sont enregistrés dans les données de votre utilisateur Home Assistant.
 
+## Style de rendu « sobre » et chapeau des murs
+
+Deux styles : **standard** (rendu d'origine) et **sobre**, qui reproduit le rendu de la carte plan-3d-live-card : ACES à faible exposition (contraste marqué), palette désaturée, murs et dessus de murs gris mats, terrain sombre uni sans texture, matières du pack atténuées (relief ×0,3, albédo adouci, anisotropie maximale), lumières chaudes avec halos plus larges, et ambiance de soirée dès qu'une lumière est allumée (mode Auto). Dans la vue maison, le bouton **Sobre** de la barre bascule d'un style à l'autre ; le choix est mémorisé dans le navigateur.
+
+```yaml
+type: custom:configurateur-3d-card
+readonly: true
+style: sobre        # standard (défaut) ou sobre ; le bouton « Sobre » de la barre a priorité (mémorisé dans ce navigateur)
+wallCap: false      # true : chapeau sombre sur le dessus des murs (désactivé par défaut)
+```
+
 ## Publier votre maison
 
 Dans le configurateur, bouton **Publier** : le plan est copié dans une carte en lecture seule (`readonly: true`) d'un tableau de bord de votre choix, créé automatiquement.

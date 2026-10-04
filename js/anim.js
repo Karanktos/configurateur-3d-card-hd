@@ -3,7 +3,7 @@ import { clamp, lerp, smooth } from './util.js';
 
 // puissance globale des luminaires (plus fort la nuit, voir core.applySun)
 // vis / mov : compteurs (remis à zéro par le rendu) d'une lumière qui s'allume ou s'éteint / d'une pièce qui bouge → les ombres doivent être recalculées
-export const LG = { k: 1, vis: 0, mov: 0 };
+export const LG = { k: 1, vis: 0, mov: 0, halo: 1 };   // halo : facteur de taille des halos (style sobre)
 
 // spec : { rot:[axe, angle] } | { slide:[x,y,z] } | { scale:[axe, de, vers] } | { glow:{mat, color, int} } | { light:{light, int} }
 //        + t0/t1 (fenêtre de temps dans [0,1]) pour enchaîner les mouvements
@@ -27,6 +27,6 @@ export function applyParts(parts, v) {
       l.intensity = a.light.int * u * LG.k;
       if (l.visible !== vis) { l.visible = vis; LG.vis++; }
     }
-    else if (a.fade) { a.fade.mat.opacity = a.fade.max * u; a.o.visible = u > 0.002; }
+    else if (a.fade) { a.fade.mat.opacity = a.fade.max * u; a.o.visible = u > 0.002; if (a.o.isSprite) { if (a.sc0 == null) a.sc0 = a.o.scale.x; a.o.scale.setScalar(a.sc0 * LG.halo); } }
   }
 }

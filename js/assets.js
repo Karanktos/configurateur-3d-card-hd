@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { ST } from './style.js';
 
 const SMALL = Math.min(screen.width, screen.height) < 700;
 export const A = { base: '', q: '', flat: false, man: null, ready: false, res: SMALL ? '512' : '1k', failed: new Set() };
@@ -60,7 +61,7 @@ export async function initAssets(bases, h, skip) {
 }
 
 function configure(t, color) {
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = SMALL ? 4 : 8;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = ST.p.soft ? ST.aniso : SMALL ? 4 : 8;
   t.colorSpace = color ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.needsUpdate = true; return t;
 }
 const loadImg = (u, color) => new Promise((ok, ko) => new THREE.TextureLoader().load(u, (t) => ok(configure(t, color)), undefined, () => ko(new Error(u))));
@@ -105,9 +106,22 @@ function applyMaps(m, k, mode) {
     t = r.mclone;
   }
   m.map = t.color || null; m.bumpMap = null;   // la normale remplace le relief tiré de la couleur
-  m.normalMap = t.normal || null; if (t.normal) m.normalScale = new THREE.Vector2(e.normalScale ?? 1, e.normalScale ?? 1);
+  m.normalMap = t.normal || null; if (t.normal) { const ns = (e.normalScale ?? 1) * ST.p.normalK; m.normalScale = new THREE.Vector2(ns, ns); }
+  for (const x of [t.color, t.normal, t.arm]) if (x && ST.p.soft && x.anisotropy !== ST.aniso) { x.anisotropy = ST.aniso; x.needsUpdate = true; }   // style sobre : anisotropie maximale (moins de flou en rasant)
+  if (ST.p.soft) soften(m);
   m.aoMap = t.arm || null; m.roughnessMap = t.arm || null; m.aoMapIntensity = AO_K;
   m.roughness = e.roughness ?? 1; m.needsUpdate = true;
+}
+
+// style sobre : l'albédo se rapproche de sa version très floue (niveau de mip élevé = moyenne locale) → le grain et les taches de la photo disparaissent, la teinte d'ensemble reste
+export function soften(m) {
+  const sf = ST.p.soft; if (!sf || m.userData.soft) return; m.userData.soft = 1;
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uKeep = { value: sf.keep }; sh.uniforms.uLod = { value: sf.lod };
+    sh.fragmentShader = 'uniform float uKeep; uniform float uLod;\n' + sh.fragmentShader.replace('#include <map_fragment>',
+      '#ifdef USE_MAP\n vec4 sdc = texture2D( map, vMapUv ); vec3 lowc = textureLod( map, vMapUv, uLod ).rgb; sdc.rgb = mix( lowc, sdc.rgb, uKeep ); diffuseColor *= sdc;\n#endif');
+  };
+  m.customProgramCacheKey = () => 'soft'; m.needsUpdate = true;
 }
 
 // matériau de sol / mur : couleur unie le temps que les images arrivent (jamais une texture à la mauvaise échelle)

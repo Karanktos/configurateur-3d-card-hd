@@ -2,7 +2,8 @@
 import * as THREE from 'three';
 import { clamp, rad, disposeTree, r2 } from './util.js';
 import { getTex, floorDef, finishDef, TEX_SIZE, floorTex, finishTex, texSize, withBump } from './textures.js';
-import { isPbr, pbrMaterial, initAssets, loadHdri, PBR_UNITS, pbrActive } from './assets.js';
+import { isPbr, pbrMaterial, initAssets, loadHdri, PBR_UNITS, pbrActive, soften } from './assets.js';
+import { ST, CAP, pick as pickStyle, use as useStyle, saveStyle, isSobre } from './style.js';
 import { wallGeometry, cutWallGeometry } from './geom.js';
 import { buildOpening, modelOf, defaultOpening } from './openings.js';
 import { buildItem, defOf, defaultItem } from './catalog.js';
@@ -111,7 +112,7 @@ export function initScene(canvas) {
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;   // + sun.shadow.radius : pénombre plus douce que PCFSoft
   renderer.shadowMap.enabled = true; renderer.shadowMap.autoUpdate = false; // recalculées à la demande (invalidate)
-  renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 0.9;   // rendu « Khronos PBR Neutral » : couleurs fidèles, plus naturelles que ACES renderer.setClearColor(0x000000, 0);
+  renderer.toneMapping = ST.p.aces ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping; renderer.toneMappingExposure = 0.9;   // rendu « Khronos PBR Neutral » : couleurs fidèles, plus naturelles que ACES renderer.setClearColor(0x000000, 0);
   const scene = new THREE.Scene(); scene.background = new THREE.Color('#dde6ee');
   const persp = new THREE.PerspectiveCamera(40, 1, 0.1, 400), ortho = new THREE.OrthographicCamera(-10, 10, 10, -10, -100, 200);
   Object.assign(R, { renderer, scene, persp, ortho, canvas, cam: persp });
@@ -119,6 +120,7 @@ export function initScene(canvas) {
   const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.55; R.envK = 1; // reflets des métaux (inox, miroir) ; envK : facteur du HDRI du pack d'assets (voir setEnvironment)
   const hemi = new THREE.HemisphereLight('#fff8ef', '#b8c0c8', 0.95); scene.add(hemi); R.hemi = hemi;
+  const amb = new THREE.AmbientLight('#ffffff', 0); scene.add(amb); R.amb = amb;   // utilisée par le style sobre seulement
   const sun = new THREE.DirectionalLight('#fff3e4', 2.4); sun.position.set(8, 16, 10); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
   scene.add(sun, sun.target); R.sun = sun; shadowRes();
@@ -174,7 +176,7 @@ export function setupCam() {
   }
   updateCutaway(); invalidate(false);
 }
-export function setView(v) { settings.view = v; if (R.sun) R.sun.castShadow = v === '3d'; topMat.color.set(v === '2d' ? '#46505a' : '#d9d4cb'); setupCam(); emit('view'); invalidate(); }
+export function setView(v) { settings.view = v; if (R.sun) R.sun.castShadow = v === '3d'; applyTop(); setupCam(); emit('view'); invalidate(); }
 export function frameAll() {
   if (settings.present && !settings.free) { fitView(); return; }
   const b = bounds();
@@ -302,15 +304,28 @@ export function project(x, y, z) {
 // matériaux de murs / sols
 // ---------------------------------------------------------------------------------------------
 const matCache = new Map();
-export function surfMat(texKey, color, rough = 0.9) {
-  const k = texKey + '|' + color;
+const tone = (c) => {   // style sobre : palette désaturée
+  const d = ST.p.desat; if (!d) return c;
+  const k = new THREE.Color(c), h = {}; k.getHSL(h); return k.setHSL(h.h, h.s * (1 - d), h.l);
+};
+export function surfMat(texKey, color, rough = 0.9, kind = '') {
+  const k = texKey + '|' + color + '|' + ST.name + '|' + kind;
   if (!matCache.has(k)) {
-    const m = isPbr(texKey) ? pbrMaterial(texKey, color) : withBump(new THREE.MeshStandardMaterial({ color, roughness: rough, map: getTex(texKey) }), texKey);
+    const P = ST.p, col = tone(color);
+    const m = isPbr(texKey) ? pbrMaterial(texKey, col) : withBump(new THREE.MeshStandardMaterial({ color: col, roughness: rough, map: getTex(texKey) }), texKey);
+    if (P.soft) {   // sobre : relief atténué, matières mates, albédo adouci, anisotropie maximale
+      if (m.bumpMap) m.bumpScale *= P.normalK;
+      if (kind && P.rough[kind]) m.roughness = Math.max(m.roughness, P.rough[kind]);
+      if (m.map) { m.map.anisotropy = ST.aniso; m.map.needsUpdate = true; }
+      soften(m);
+    }
     m.userData.shared = true; matCache.set(k, m);
   }
   return matCache.get(k);
 }
 const topMat = (() => { const m = new THREE.MeshStandardMaterial({ color: '#d9d4cb', roughness: 0.9 }); m.userData.shared = true; return m; })();
+// dessus des murs : chapeau sombre si wallCap, sinon la teinte du style (clair en standard, gris mat en sobre) ; gris foncé en plan 2D
+function applyTop() { topMat.color.set(ST.wallCap ? CAP : settings.view === '2d' ? '#46505a' : ST.p.top); topMat.roughness = ST.p.soft ? 0.95 : 0.9; }
 
 // ---------------------------------------------------------------------------------------------
 // rendu des entités
@@ -374,7 +389,7 @@ export function renderWalls() {
     });
     const ea = extension(w, false), eb = extension(w, true);
     const geo = (wallsCut && w.h > CUT_H && cutWallGeometry(L, CUT_H, w.t, holes, ea, eb, finishTex(fa), finishTex(fb))) || wallGeometry(L, w.h, w.t, holes, ea, eb, finishTex(fa), finishTex(fb));
-    const mesh = new THREE.Mesh(geo, [surfMat(finishTex(fa), w.fa.c), surfMat(finishTex(fb), w.fb.c), topMat]);
+    const mesh = new THREE.Mesh(geo, [surfMat(finishTex(fa), w.fa.c, 0.9, 'wall'), surfMat(finishTex(fb), w.fb.c, 0.9, 'wall'), topMat]);
     mesh.castShadow = mesh.receiveShadow = true;
     const g = new THREE.Group(); g.position.set(w.x1, 0, w.z1); g.rotation.y = -ang; g.add(mesh);
     g.userData.wall = w.id; g.userData.mesh = mesh; tagRef(g, 'wall', w.id);
@@ -428,6 +443,9 @@ function mergeGeos(geos) {   // boîtes simples → une seule géométrie (posit
 }
 
 // terrain : dalle de gravier avec ses flancs de terre (mode « diorama » de la vue maison)
+// style sobre : terrain sombre uni, sans aucune texture (la couleur du plan, si elle est définie, est conservée)
+const terrainCache = new Map();
+function terrainMat(c) { const k = c || ST.p.terrain; if (!terrainCache.has(k)) { const m = new THREE.MeshStandardMaterial({ color: tone(k), roughness: 1 }); m.userData.shared = true; terrainCache.set(k, m); } return terrainCache.get(k); }
 const soilMat = (() => { const m = new THREE.MeshStandardMaterial({ color: '#5b4a3a', roughness: 1 }); m.userData.shared = true; return m; })();
 export function renderPlot() {
   for (const c of [...root.plot.children]) { root.plot.remove(c); disposeTree(c); }
@@ -438,7 +456,7 @@ export function renderPlot() {
   const geo = new THREE.PlaneGeometry(w, d); geo.rotateX(-Math.PI / 2);
   const uv = geo.attributes.uv, pos = geo.attributes.position, sz = TEX_SIZE.gravel;
   for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) + w / 2) / sz[0], (pos.getZ(i) + d / 2) / sz[1]);
-  const top = new THREE.Mesh(geo, surfMat('gravel', col, 1)); top.position.set(cx, -0.01, cz); top.receiveShadow = true;
+  const top = new THREE.Mesh(geo, ST.p.terrain ? terrainMat(S.meta.plot && S.meta.plot.color) : surfMat('gravel', col, 1)); top.position.set(cx, -0.01, cz); top.receiveShadow = true;
   const side = new THREE.Mesh(new THREE.BoxGeometry(w, 0.45, d), soilMat); side.position.set(cx, -0.01 - 0.225 - 0.002, cz); side.receiveShadow = true;
   root.plot.add(top, side); invalidate();
 }
@@ -478,7 +496,7 @@ export function renderFloors() {
       const wx = f.x + f.w / 2 + pos.getX(i), wz = f.z + f.d / 2 + pos.getZ(i);
       uv.setXY(i, (wx * ca + wz * sa) / (size[0] * sc), (-wx * sa + wz * ca) / (size[1] * sc));
     }
-    const m = new THREE.Mesh(geo, surfMat(key, f.color, fd.tex === 'marble' || fd.id === 'uni' ? 0.35 : 0.7));
+    const m = new THREE.Mesh(geo, surfMat(key, f.color, fd.tex === 'marble' || fd.id === 'uni' ? 0.35 : 0.7, 'floor'));
     m.receiveShadow = true; m.position.set(f.x + f.w / 2, FLOOR_Y + Math.min(idx, 40) * 0.0004, f.z + f.d / 2);
     const g = new THREE.Group(); g.add(m); tagRef(g, 'floor', f.id); root.floor.add(g); objs.floor.set(f.id, g);
   });
@@ -721,6 +739,11 @@ function loop(t) {
     }
   }
   animating = busy;
+  if (LG.vis && ST.p.evening) R.eveT = eveTarget();   // une lumière vient de s'allumer ou de s'éteindre
+  if ((R.eve || 0) !== (R.eveT || 0)) {
+    const d = (R.eveT || 0) - (R.eve || 0), st = dt / 1.5; R.eve = Math.abs(d) <= st ? R.eveT : R.eve + Math.sign(d) * st;
+    R.quiet = true; applySun(); R.quiet = false; busy = true;
+  }
   if (busy || dirty) {
     scaleHandles();
     for (const f of R.frameHooks || []) f();
@@ -767,21 +790,23 @@ export function applySun() {
   const sm = settings.sun, sun = R.sun;
   if (!sun) return;
   const bg = (c) => { if (R.scene.background) R.scene.background.set(c); };
-  if (sm.mode === 'off') {
+  if (sm.mode === 'off' && !isSobre()) {
     R.sunDir = null; sun.color.set('#fff3e4'); sun.intensity = 2.4; R.hemi.intensity = 0.95; R.hemi.color.set('#fff8ef'); R.hemi.groundColor.set('#b8c0c8');
     R.scene.environmentIntensity = 0.55 * R.envK; R.renderer.toneMappingExposure = 0.9; bg('#dde6ee'); R.ground.material.color.set('#e7ecef');
-    R.grid.material.opacity = 0.9; R.sunInfo = null; setLightGain(1); updateLight(); invalidate(); return;
+    R.grid.material.opacity = 0.9; R.sunInfo = null; R.amb.intensity = 0; LG.halo = 1; setLightGain(1); updateLight(); invalidate(); return;
   }
-  let p = SUN.current(sm);
+  let p = sm.mode === 'off' ? { el: 52, az: 175 } : SUN.current(sm);   // style sobre dans l'éditeur : plein jour
   if (sm.force === 'day') p = { el: 52, az: p.el > 8 ? p.az : 175 };         // « Jour » : plein soleil quelle que soit l'heure
   else if (sm.force === 'night') p = { el: -32, az: p.az };                    // « Soir » : nuit, lumières allumées bien visibles
-  const L = SUN.lighting(p.el), rot = (S.meta && S.meta.rot) || 0;
+  const so = isSobre(), L = so ? SUN.lightingSobre(p.el, ST.p, R.eve || 0) : SUN.lighting(p.el), rot = (S.meta && S.meta.rot) || 0;
   const e = Math.max(p.el, 8) * Math.PI / 180, a = ((p.az + rot) * Math.PI) / 180;
   // repère du plan : x vers la droite (est), z vers le bas (sud) ; nord du plan = z décroissant, décalé de « rot » degrés par rapport au vrai nord
   R.sunDir = new THREE.Vector3(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)).normalize();
   sun.intensity = L.sun;
   if (L.useSun) { if (p.el < 8) sun.color.setRGB(1, 0.5, 0.25).lerp(cA.setRGB(1, 0.69, 0.44), cl01(p.el / 8)); else sun.color.setRGB(1, 0.69, 0.44).lerp(cA.set('#fff2e2'), cl01((p.el - 8) / 17)); }
   else sun.color.set('#8fa6d6');
+  if (so) { sobreColors(L); return finishSun(L, p); }
+  R.amb.intensity = 0; LG.halo = 1;
   R.hemi.intensity = L.hemi; R.hemi.color.copy(cA.set('#3a4a6a')).lerp(cB.set('#fff6ea'), L.t).lerp(cB.setRGB(1, 0.72, 0.5), 0.28 * L.tw);
   R.hemi.groundColor.copy(cA.set('#141c26')).lerp(cB.set('#b8c0c8'), L.t);
   R.scene.environmentIntensity = L.env * R.envK; R.renderer.toneMappingExposure = L.exposure * 0.95;
@@ -791,8 +816,24 @@ export function applySun() {
   setLightGain(1.35 - 0.35 * L.t);                                              // les luminaires éclairent un peu plus la nuit
   updateLight(); invalidate(); emit('sun');
 }
+// style sobre : couleurs et intensités de plan-3d-live-card (hémisphère ciel / sol, ambiance, exposition, environnement)
+const lin = (c, hex) => { const n = parseInt(hex.slice(1), 16); return c.setRGB((n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255, THREE.LinearSRGBColorSpace); };   // plan-3d (three r147) lit avec ses teintes « telles quelles », sans conversion sRGB → linéaire
+function sobreColors(L) {
+  R.hemi.intensity = L.hemi; R.amb.intensity = L.amb;
+  R.hemi.color.copy(lin(cA, '#5a6f9a')).lerp(lin(cB, '#eef3ff'), L.t).lerp(cB.setRGB(1, 0.72, 0.5), 0.28 * L.tw);
+  R.hemi.groundColor.copy(lin(cA, '#141824')).lerp(lin(cB, '#8a7d6a'), L.t);
+  R.amb.color.copy(lin(cA, '#28324a')).lerp(cB.setRGB(1, 1, 1), L.t);
+  R.scene.environmentIntensity = L.env * R.envK; R.renderer.toneMappingExposure = L.exposure;
+}
+function finishSun(L, p) {
+  if (R.scene.background) R.scene.background.copy(cA.set('#0b1220')).lerp(cB.set('#dde6ee'), L.t);
+  R.ground.material.color.copy(cA.set('#1b232c')).lerp(cB.set('#e7ecef'), L.t);
+  R.grid.material.opacity = 0.12 + 0.78 * L.t; R.sunInfo = { el: p.el, az: p.az, night: L.t < 0.35, t: L.t };
+  const g = ST.p.gain, h = ST.p.halo; LG.halo = h[0] + h[1] * L.t; setLightGain(g[0] + g[1] * L.t);   // luminaires et halos : plus forts de jour (l'exposition est basse), plus doux le soir
+  updateLight(); invalidate(); if (!R.quiet) emit('sun');
+}
 const cl01 = (x) => Math.max(0, Math.min(1, x));
-function setLightGain(k) { if (LG.k === k) return; LG.k = k; for (const a of anims.values()) applyParts(a.parts, a.cur); }
+function setLightGain(k) { if (LG.k === k && LG.hd === LG.halo) return; LG.k = k; LG.hd = LG.halo; for (const a of anims.values()) applyParts(a.parts, a.cur); }
 let sunTimer = 0;
 export function setSun(patch) {
   Object.assign(settings.sun, patch);
@@ -814,15 +855,42 @@ export function setPresent(on) {
     settings.view = '3d'; settings.camOrtho = !(S.meta && S.meta.view && S.meta.view.persp); settings.free = false; settings.wallMode = S.meta && S.meta.view && S.meta.view.persp ? 'auto' : 'haut';   // vue de l'éditeur reprise : murs coupés comme dans l'éditeur
     R.ground.visible = R.grid.visible = R.grid5.visible = false; R.scene.background = null;
     if (!S.meta.plot && S.meta.plot !== false && structBounds()) S.meta.plot = true;
-    topMat.color.set('#d9d4cb'); renderPlot(); resetView();   // dessus des murs clair (pas de chapeau sombre)
+    applyTop(); renderPlot(); resetView();   // dessus des murs clair (pas de chapeau sombre)
     setSun({ mode: settings.sun.mode === 'sim' ? 'sim' : 'live', force: null });
   } else {
     const b = beforePresent || {};
     settings.camOrtho = !!b.camOrtho; settings.view = b.view || '3d'; settings.free = false; settings.wallMode = b.wall || 'auto';
     R.ground.visible = R.grid.visible = R.grid5.visible = true; R.scene.background = b.bg || new THREE.Color('#dde6ee');
-    topMat.color.set(settings.view === '2d' ? '#46505a' : '#d9d4cb'); setSun(b.sun || { mode: 'off', force: null }); if (b.V) Object.assign(V, b.V); renderPlot(); setupCam();
+    applyTop(); setSun(b.sun || { mode: 'off', force: null }); if (b.V) Object.assign(V, b.V); renderPlot(); setupCam();
   }
   emit('present'); emit('view'); invalidate();
 }
-export function setForce(f) { setSun({ force: f || null }); emit('force'); }
+export function setForce(f) { setSun({ force: f || null }); R.eveT = eveTarget(); emit('force'); }
+
+// ---------------------------------------------------------------------------------------------
+// style de rendu (standard / sobre) : voir js/style.js
+// ---------------------------------------------------------------------------------------------
+const toneOf = () => (ST.p.aces ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping);
+// ambiance de soirée (style sobre, mode Auto) : dès qu'une lumière est allumée, le ciel passe au crépuscule en fondu
+function eveTarget() {
+  if (!ST.p.evening || settings.sun.force) return 0;
+  for (const a of anims.values()) for (const q of a.parts) if (q.light && q.light.light.visible) return 1;
+  return 0;
+}
+function applyStyleAll() {
+  R.renderer.toneMapping = toneOf(); applyTop();
+  R.scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); });
+  R.eve = 0; R.eveT = eveTarget();
+  rebuildAll(); renderPlot(); applySun(); invalidate();
+}
+export function setStyle(name, save = true) {
+  if (name === ST.name) return ST.name;
+  useStyle(name); if (save) saveStyle(ST.name);
+  built.clear(); applyStyleAll(); emit('style'); return ST.name;
+}
+// au démarrage : `style:` et `wallCap:` du YAML (le choix fait avec le bouton, mémorisé dans ce navigateur, a priorité sur `style:`)
+export function initStyle(yaml, wallCap) {
+  ST.wallCap = wallCap === true || /^(true|1|oui|on)$/i.test(String(wallCap)); ST.aniso = Math.max(8, R.renderer.capabilities.getMaxAnisotropy());
+  useStyle(pickStyle(yaml)); R.renderer.toneMapping = toneOf(); applyTop(); R.eve = 0; R.eveT = 0; applySun();
+}
 

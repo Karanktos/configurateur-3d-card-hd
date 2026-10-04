@@ -7,6 +7,7 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { ST } from './style.js';
 
 let C = null;   // { composer, render, gtao, w, h }
 const KEY = 'cfg3d-hd';
@@ -38,7 +39,7 @@ function create(renderer, scene, cam, skip) {
   const contrast = new ShaderPass({ uniforms: { tDiffuse: { value: null }, k: { value: 1.07 } }, vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: 'uniform sampler2D tDiffuse; uniform float k; varying vec2 vUv; void main() { vec4 c = texture2D(tDiffuse, vUv); gl_FragColor = vec4(clamp((c.rgb - 0.5) * k + 0.5, 0.0, 1.0), c.a); }' });
   composer.addPass(render); composer.addPass(gtao); composer.addPass(bloom); composer.addPass(new OutputPass()); composer.addPass(contrast);
-  return { composer, render, gtao, bloom, w: size.x, h: size.y };
+  return { composer, render, gtao, bloom, contrast, w: size.x, h: size.y };
 }
 
 // rend la scène : chaîne HD si active, sinon rendu direct ; renvoie true si la chaîne HD a été utilisée
@@ -51,6 +52,8 @@ export function renderHD(renderer, scene, cam, on, skip, glow = false) {
     C.render.camera = cam; C.gtao.camera = cam;
     C.gtao.gtaoMaterial.defines.PERSPECTIVE_CAMERA = cam.isPerspectiveCamera ? 1 : 0; C.gtao.gtaoMaterial.needsUpdate = true;
   }
+  const P = ST.p;   // réglages du style actif
+  C.gtao.blendIntensity = P.gtao; C.contrast.uniforms.k.value = P.contrast; C.bloom.strength = P.bloom.s; C.bloom.radius = P.bloom.r; C.bloom.threshold = P.bloom.t;
   C.bloom.enabled = glow;
   C.composer.render();
   return true;
