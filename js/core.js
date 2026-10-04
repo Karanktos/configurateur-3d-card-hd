@@ -727,7 +727,7 @@ function loop(t) {
   }
 }
 // rendu HD (occlusion ambiante) en 3D seulement ; les aides d'édition et les objets transparents n'y participent pas
-const noAO = (o) => o === R.ui || o === R.grid || o === R.grid5 || o.userData.cut === true || (o.isMesh && !Array.isArray(o.material) && o.material.transparent);
+const noAO = (o) => o === R.ui || o === R.grid || o === R.grid5 || o.userData.cut === true || o.isSprite || (o.material && !Array.isArray(o.material) && o.material.transparent);   // halos des lampes (sprites), verre, fantômes : ni ombrés ni occultants pour l'occlusion ambiante
 function draw() { renderHD(R.renderer, R.scene, R.cam, settings.hd && settings.view === '3d', noAO, !!(R.sunInfo && R.sunInfo.t < 0.6)); }   // halo des lampes le soir
 export const isAnimating = () => animating;
 export function snapshotPNG() { R.renderer.shadowMap.needsUpdate = true; draw(); return R.canvas.toDataURL('image/png'); }

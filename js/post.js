@@ -29,6 +29,10 @@ function create(renderer, scene, cam, skip) {
   composer.setPixelRatio(1); composer.setSize(size.x, size.y);
   // halo autour des sources lumineuses (lampes, écrans) : seules les valeurs très lumineuses (> seuil, avant exposition) rayonnent
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.32, 0.22, 0.95); bloom.enabled = false;
+  // le flou du halo écrit une opacité de 1 partout : en mélange additif le fond transparent de la vue publiée devenait noir opaque la nuit.
+  // On ajoute la lumière du halo (couleur) sans toucher à l'opacité de l'image.
+  const bm = bloom.blendMaterial; bm.blending = THREE.CustomBlending; bm.blendEquation = THREE.AddEquation;
+  bm.blendSrc = THREE.SrcAlphaFactor; bm.blendDst = THREE.OneFactor; bm.blendSrcAlpha = THREE.ZeroFactor; bm.blendDstAlpha = THREE.OneFactor;
   composer.addPass(render); composer.addPass(gtao); composer.addPass(bloom); composer.addPass(new OutputPass());
   return { composer, render, gtao, bloom, w: size.x, h: size.y };
 }
