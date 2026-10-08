@@ -85,6 +85,18 @@ style: sobre        # standard (défaut) ou sobre ; le bouton « Sobre » de la 
 wallCap: false      # true : chapeau sombre sur le dessus des murs (désactivé par défaut)
 ```
 
+### Vue centrée et escaliers
+
+* **Vue maison centrée** : par défaut la vue publiée est légèrement inclinée (comme la carte plan-3d). Pour une vue de face, sans glissement de gauche à droite : case « Vue centrée » cochée par défaut à la publication, bouton **Centrée** de la barre de la vue maison (mémorisé dans le navigateur), ou option YAML `centered: true` (`false` force la vue inclinée) :
+
+```yaml
+type: custom:configurateur-3d-card
+readonly: true
+centered: true
+```
+
+* **Escaliers** (catégorie « Structure ») : droit, quart tournant avec palier, demi-tour avec palier, demi-tour balancé, hélicoïdal. Largeur des marches, main courante et sens du virage (variante) réglables ; le nombre de marches découle de l'emprise.
+
 ## Publier votre maison
 
 Dans le configurateur, bouton **Publier** : le plan est copié dans une carte en lecture seule (`readonly: true`) d'un tableau de bord de votre choix, créé automatiquement.

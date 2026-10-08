@@ -41,6 +41,7 @@ const CFG = window.__CFG || {};
 initStyle(CFG.style, CFG.wallCap);   // style de rendu (standard / sobre) et chapeau des murs, depuis le YAML
 startAssets(CFG.assets_bases || (/^https?:/.test(location.protocol) ? ['assets/'] : []), CFG.assets_skip);   // pack d'assets PBR (facultatif) : adresses fournies par la carte, ou dossier voisin en développement
 settings.readonly = !!CFG.readonly;
+try { const c = localStorage.getItem('cfg3d-centered'); settings.centered = CFG.centered != null ? !!CFG.centered : c === '1' ? true : c === '0' ? false : null; } catch (e) { settings.centered = CFG.centered != null ? !!CFG.centered : null; }   // vue maison centrée : YAML `centered`, sinon dernier choix du bouton « Centrée », sinon réglage du plan
 if (settings.readonly) { document.body.classList.add('ro'); document.documentElement.classList.add('ro'); document.documentElement.dataset.theme = 'light'; }   // pas de thème sombre : l'iframe doit rester transparente
 const had = settings.readonly ? false : loadSaved();
 if (settings.readonly) {

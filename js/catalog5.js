@@ -1,21 +1,7 @@
-// Éléments d'architecture et de jardin ajoutés pour reproduire fidèlement une maison réelle : escalier droit à marches suspendues,
-// barbecue maçonné avec cheminée, banquette de jardin en teck. Même repère que catalog.js : origine au sol au centre, +x largeur, +z face avant.
+// Éléments d'architecture et de jardin ajoutés pour reproduire fidèlement une maison réelle : barbecue maçonné avec cheminée, banquette de jardin en teck. Même repère que catalog.js : origine au sol au centre, +x largeur, +z face avant.
 import * as THREE from 'three';
 
 export function registerMaison(reg) {
-  // ---------- escalier droit : marches « flottantes » entre deux limons inclinés ----------
-  // la montée se fait vers l'arrière (-z) : on arrive par la face avant. w = largeur, d = emmarchement + marche, h = hauteur à franchir.
-  reg('escalier_droit', 'Structure', 'Escalier droit (marches suspendues)', 0.58, 3.42, 2.4, 1290, [['Marches', '#f2f3f3'], ['Limons', '#ffffff']], (g, p, K) => {
-    const nb = Math.round(p.nb || 12), tm = K.m(p.c1, { r: 0.5 }), lm = K.m(p.c2, { r: 0.45 });
-    const run = p.d - 0.22, tw = p.w - 0.05, tread = 0.22, th = 0.03;
-    for (let i = 1; i <= nb; i++) {
-      const a = i / (nb + 1), z = run / 2 - run * a, y = p.h * a;
-      K.box(tw, th, tread, tm, 0, y - th / 2, z);
-    }
-    const len = Math.hypot(run, p.h), ang = Math.atan2(p.h, run);
-    for (const s of [-1, 1]) { const st = K.box(0.035, 0.24, len, lm, s * (p.w / 2 - 0.0175), p.h / 2 + 0.06, 0); st.rotation.x = ang; }
-  }, { fin: null, lock: false, fields: [{ k: 'nb', l: 'Nombre de marches', min: 6, max: 20, step: 1, def: 12, unit: '' }] });
-
   // ---------- barbecue maçonné : corps enduit, hotte à cheminée en briques, plans de travail en pierre ----------
   // construit à partir des cotes (en plan : x vers l'est, y vers le nord) de la maison d'origine ; face avant (+z) = ouest du plan d'origine.
   reg('bbq_maconne', 'Extérieur', 'Barbecue maçonné avec cheminée', 2.16, 2.58, 3.4, 2490, [['Enduit', '#f1ece2'], ['Pierre', '#8e5a42']], (g, p, K) => {
